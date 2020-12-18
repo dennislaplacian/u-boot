@@ -18,6 +18,14 @@ config MMC_WRITE
 	help
 	  Enable write access to MMC and SD Cards
 
+config MMC_SECURE_ERASE
+	bool "Enable secure erase for eMMC"
+	depends on MMC_WRITE
+	default n
+	help
+	  This option replace the default erase with secure erase in eMMC v4.4
+	  and above cards.
+
 config MMC_BROKEN_CD
 	bool "Poll for broken card detection case"
 	help

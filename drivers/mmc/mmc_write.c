@@ -15,7 +15,7 @@
 #include <linux/math64.h>
 #include "mmc_private.h"
 
-static ulong mmc_erase_t(struct mmc *mmc, ulong start, lbaint_t blkcnt)
+static ulong mmc_erase_t(struct mmc *mmc, ulong start, lbaint_t blkcnt, uint arg)
 {
 	struct mmc_cmd cmd;
 	ulong end;
@@ -52,7 +52,7 @@ static ulong mmc_erase_t(struct mmc *mmc, ulong start, lbaint_t blkcnt)
 		goto err_out;
 
 	cmd.cmdidx = MMC_CMD_ERASE;
-	cmd.cmdarg = MMC_ERASE_ARG;
+	cmd.cmdarg = arg;
 	cmd.resp_type = MMC_RSP_R1b;
 
 	err = mmc_send_cmd(mmc, &cmd, NULL);
@@ -81,6 +81,7 @@ ulong mmc_berase(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt)
 	struct mmc *mmc = find_mmc_device(dev_num);
 	lbaint_t blk = 0, blk_r = 0;
 	int timeout_ms = 1000;
+	uint arg = MMC_ERASE_ARG;
 
 	if (!mmc)
 		return -1;
@@ -105,6 +106,15 @@ ulong mmc_berase(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt)
 		       ((start + blkcnt + mmc->erase_grp_size)
 		       & ~(mmc->erase_grp_size - 1)) - 1);
 
+#if CONFIG_IS_ENABLED(MMC_SECURE_ERASE)
+	if (!(mmc->sec_feature_support & EXT_CSD_SEC_ER_EN)) {
+		printf("secure erase not supported on device\n"
+		       "perform insecure erase\n");
+	} else {
+		arg = MMC_SECURE_ERASE_ARG;
+	}
+#endif
+
 	while (blk < blkcnt) {
 		if (IS_SD(mmc) && mmc->ssr.au) {
 			blk_r = ((blkcnt - blk) > mmc->ssr.au) ?
@@ -113,7 +123,7 @@ ulong mmc_berase(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt)
 			blk_r = ((blkcnt - blk) > mmc->erase_grp_size) ?
 				mmc->erase_grp_size : (blkcnt - blk);
 		}
-		err = mmc_erase_t(mmc, start + blk, blk_r);
+		err = mmc_erase_t(mmc, start + blk, blk_r, arg);
 		if (err)
 			break;
 
