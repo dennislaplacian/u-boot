@@ -2272,7 +2272,7 @@ static int mmc_startup_v4(struct mmc *mmc)
 		if ((capacity >> 20) > 2 * 1024)
 			mmc->capacity_user = capacity;
 	}
-#if CONFIG_IS_ENABLED(MMC_SECURE_ERASE)
+#if IS_ENABLED(CONFIG_MMC_SECURE_ERASE)
 	if (mmc->version >= MMC_VERSION_4_4 && IS_MMC(mmc))
 		mmc->sec_feature_support = ext_csd[EXT_CSD_SEC_FEATURE_SUPPORT];
 #endif

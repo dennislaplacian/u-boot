@@ -106,7 +106,7 @@ ulong mmc_berase(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt)
 		       ((start + blkcnt + mmc->erase_grp_size)
 		       & ~(mmc->erase_grp_size - 1)) - 1);
 
-#if CONFIG_IS_ENABLED(MMC_SECURE_ERASE)
+#if IS_ENABLED(CONFIG_MMC_SECURE_ERASE)
 	if (!(mmc->sec_feature_support & EXT_CSD_SEC_ER_EN)) {
 		printf("secure erase not supported on device\n"
 		       "perform insecure erase\n");
